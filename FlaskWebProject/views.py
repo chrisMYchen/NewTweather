@@ -235,7 +235,7 @@ def about():
 #tweet0 = example_tweets[0] #gets sentiment of tweets/qualitative, emotion words
 #tweet1 = example_tweets[1]
 #tweet2 = example_tweets[2]
-Tweeters = lotTweets[:50]
+Tweeters = lotTweets[:25]
 Tweet0 = lotTweets[0][0]
 Tweet1 = lotTweets[1][0]
 Tweet2 = lotTweets[2][0]
