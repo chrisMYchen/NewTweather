@@ -163,7 +163,7 @@ lat = 40.7127
 lon = -74.0059
 mip = j['ip']
 
-print(mip)
+
 
 #gmaps = GoogleMaps('AIzaSyD2Cw2PjnIF4rmpwtvuN5ARgCXcWC_OgEI')
 #lat1, lng = gmaps.address_to_latlng(address)
@@ -178,7 +178,7 @@ try:
                       'wind', 'windy', 'overcast'], or_operator=True)
     #tso.set_until(datetime.date(2015, 11, 13))
     tso.set_language('en')
-    tso.set_geocode(lat, lon, 10, True)
+    tso.set_geocode(40.7127, -74.005, 20, True)
     tso.set_include_entities(False)
  
     ts = TwitterSearch(
