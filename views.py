@@ -275,6 +275,6 @@ def tweather():
         t2 = Tweet1,
         t3 = Tweet2,
         clothes = "Clothing to wear...",
-        temp_loc = "Temperature..."
+        temp_loc = "Hello Temperature..."
     )
 
