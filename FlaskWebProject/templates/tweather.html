@@ -22,7 +22,7 @@
       if(navigator.geolocation)
           navigator.geolocation.getCurrentPosition(handleGetCurrentPosition, onError);
   }
-
+  //Given tweet data, create Google Maps visualization
   function handleGetCurrentPosition(location){
 
       //var lat = location.coords.latitude;
@@ -37,9 +37,11 @@
       });
    
       var infowindow = new google.maps.InfoWindow();
-   
+
+
+      //generates the marker points on the Google map
       var marker, i;
-   
+    
       for (i = 0; i < tweets.length; i++) {
        marker = new google.maps.Marker({
          position: new google.maps.LatLng(tweets[i][1][0], tweets[i][1][1]),

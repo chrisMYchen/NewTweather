@@ -13,8 +13,13 @@ import urllib2
 import requests
 
 
-#----------nick thing-------
 
+#--------------Weather Description--------------
+#Basic natural language processing to determine what 
+#the overarching weather is like.
+#Weights weather keywords in tweets to find highest ranking words.
+#Input: Array of tweets collected
+#Output: Top ranking notion/temp/prec as an array
 def weather_desc(tweets):
     notions = {'windy': 0.0,
                'comfortable': 0.0,
@@ -146,6 +151,11 @@ def weather_desc(tweets):
     return [[max(notions, key=notions.get), max(temps, key=temps.get), max(precs, key=precs.get)],
             texts]
  
+ #API for Geolocation
+ #Solution doesn't work unless locally hosted
+ #because it finds the server's location.
+ #Need to migrate tweet grabbing and analysis 
+ #to Javascript on client side.
  #-----get current location----
 send_url = 'http://freegeoip.net/json'
 r = requests.get(send_url)
@@ -155,13 +165,14 @@ lat = 40.7127
 #lon = j['longitude']
 lon = -74.0059
 mip = j['ip']
-print(mip)
-
-#gmaps = GoogleMaps('AIzaSyD2Cw2PjnIF4rmpwtvuN5ARgCXcWC_OgEI')
-#lat1, lng = gmaps.address_to_latlng(address)
 
 
- #-----get current location----
+#-------------------Twitter Scraper-------------
+#Uses TwitterSearch https://github.com/ckoepp/TwitterSearch
+#Finds tweets with according keywords, language, within 20km
+#of the provided longitude/latitude.
+#Then stores parts of the weather_desc in variables to later pass
+
 from TwitterSearch import *
 try:
     tso = TwitterSearchOrder()
@@ -194,8 +205,21 @@ try:
 except TwitterSearchException as e:
     print(e)
 
-#---------nick thing------
 
+#Temperature of current location based on API needs to be moved to Javascript
+#on Client Side
+
+#Same with City name.
+
+#Future to add:
+#Clothing recommendation/Actions to take
+
+
+
+#Renders the html pages based on template.
+#Basic template provides
+
+#Home page
 @app.route('/')
 @app.route('/home')
 def home():
@@ -206,6 +230,7 @@ def home():
       #  year=datetime.now().year,
     )
 
+#Contact page
 @app.route('/contact')
 def contact():
     """Renders the contact page."""
@@ -216,6 +241,8 @@ def contact():
         message='Your contact page.'
     )
 
+
+#About page
 @app.route('/about')
 def about():
     """Renders the about page."""
@@ -226,34 +253,17 @@ def about():
         message='Your application description page.'
     )
 
-#weatherTweets = "holder" #gettweets in area
-#tweetsToShow = "holder" #getlast4tweets on weather in area
-#weatherWords = "holder" #parse python weatherTweets for appropriate key words
-#commonWords = "holder" #finds most commonWords
 
-
-#tweet0 = example_tweets[0] #gets sentiment of tweets/qualitative, emotion words
-#tweet1 = example_tweets[1]
-#tweet2 = example_tweets[2]
+#Collects first 25 tweets as well as the three most recent
 Tweeters = lotTweets[:25]
 Tweet0 = lotTweets[0][0]
 Tweet1 = lotTweets[1][0]
 Tweet2 = lotTweets[2][0]
 
-#temp_f = 0
-#location = ""
-#f = urllib2.urlopen('http://api.wunderground.com/api/72d0d0413d94447d/geolookup/conditions/q/MA/Boston.json')
-#json_string = f.read()
-#parsed_json = json.loads(json_string)
-#location = parsed_json['location']['city']
-#temp_f = parsed_json['current_observation']['temp_f']
-#print "Current temperature in %s is: %s" % (location, temp_f)
-#f.close()
-
-
+#Renders the Tweather page and passes necessary variables
 @app.route('/tweather')
 def tweather():
-    """Renders the about page."""
+    """Renders the tweather page."""
     return render_template(
         'tweather.html',
         title='Tweather',
@@ -269,4 +279,36 @@ def tweather():
         clothes = "Wear...",
         temp_loc = "NY Temp..."
     )
+
+
+
+
+#---------------Retired Code (left if need in future) -----------
+#Temperature of current location based on API needs to be moved to Javascript
+#on Client Side
+
+#Same with City name.
+
+#temp_f = 0
+#location = ""
+#f = urllib2.urlopen('http://api.wunderground.com/api/72d0d0413d94447d/geolookup/conditions/q/MA/Boston.json')
+#json_string = f.read()
+#parsed_json = json.loads(json_string)
+#location = parsed_json['location']['city']
+#temp_f = parsed_json['current_observation']['temp_f']
+#print "Current temperature in %s is: %s" % (location, temp_f)
+#f.close()
+
+
+    #weatherTweets = "holder" #gettweets in area
+#tweetsToShow = "holder" #getlast4tweets on weather in area
+#weatherWords = "holder" #parse python weatherTweets for appropriate key words
+#commonWords = "holder" #finds most commonWords
+
+
+#tweet0 = example_tweets[0] #gets sentiment of tweets/qualitative, emotion words
+#tweet1 = example_tweets[1]
+#tweet2 = example_tweets[2]
+
+
 
