@@ -325,7 +325,8 @@ def tweather():
         city = myCity,
         state = myRegionCode,
         clothes = "Wear...",
-        temp_loc = "NY Temp..."
+        temp_loc = "NY Temp...",
+        yourIP = clientIP
     )
 
 
