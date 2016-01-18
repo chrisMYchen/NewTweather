@@ -11,6 +11,12 @@ import string
 import json
 import urllib2
 import requests
+from flask import request
+from flask import jsonify
+from urllib2 import urlopen
+from contextlib import closing
+
+
 
 
 
@@ -157,14 +163,54 @@ def weather_desc(tweets):
  #Need to migrate tweet grabbing and analysis 
  #to Javascript on client side.
  #-----get current location----
-send_url = 'http://freegeoip.net/json'
-r = requests.get(send_url)
-j = json.loads(r.text)
+#send_url = 'http://freegeoip.net/json'
+#r = requests.get(send_url)
+#j = json.loads(r.text)
 #lat = j['latitude']
 lat = 40.7127
 #lon = j['longitude']
 lon = -74.0059
-mip = j['ip']
+#mip = j['ip']
+
+#---------get client ip address ------------
+
+clientIP = request.remote_addr
+
+#http://stackoverflow.com/questions/2543018/what-python-libraries-can-tell-me-approximate-location-and-time-zone-given-an-ip
+FREEGEOPIP_URL = 'http://freegeoip.net/json/'
+
+SAMPLE_RESPONSE = """{
+    "ip":"108.46.131.77",
+    "country_code":"US",
+    "country_name":"United States",
+    "region_code":"NY",
+    "region_name":"New York",
+    "city":"Brooklyn",
+    "zip_code":"11249",
+    "time_zone":"America/New_York",
+    "latitude":40.645,
+    "longitude":-73.945,
+    "metro_code":501
+}"""
+
+#get_geo_location_for_ip uses freegeoip to find geolocation info
+#based on a given IP address.
+#Input: IP address
+#Output: JSON for geolocation data
+def get_geolocation_for_ip(ip):
+    url = '{}/{}'.format(FREEGEOPIP_URL, ip)
+
+    response = requests.get(url)
+    response.raise_for_status()
+
+    return response.json()
+
+clientLocation = get_geolocation_for_ip(clientIP)
+myLat = clientLocation['latitude']
+myLong = clientLocation['longitude']
+myCity = clientLocation['city']
+myRegionCode = clientLocation['region_code']
+
 
 
 #-------------------Twitter Scraper-------------
@@ -181,7 +227,7 @@ try:
                       'wind', 'windy', 'overcast'], or_operator=True)
     #tso.set_until(datetime.date(2015, 11, 13))
     tso.set_language('en')
-    tso.set_geocode(lat, lon, 20, True)
+    tso.set_geocode(myLat, myLong, 20, True)
     tso.set_include_entities(False)
  
     ts = TwitterSearch(
@@ -276,6 +322,8 @@ def tweather():
         t1 = Tweet0,
         t2 = Tweet1,
         t3 = Tweet2,
+        city = myCity,
+        state = myRegionCode,
         clothes = "Wear...",
         temp_loc = "NY Temp..."
     )
