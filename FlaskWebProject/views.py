@@ -158,41 +158,11 @@ def weather_desc(tweets):
     return [[max(notions, key=notions.get), max(temps, key=temps.get), max(precs, key=precs.get)],
             texts]
  
- #API for Geolocation
- #Solution doesn't work unless locally hosted
- #because it finds the server's location.
- #Need to migrate tweet grabbing and analysis 
- #to Javascript on client side.
- #-----get current location----
-#send_url = 'http://freegeoip.net/json'
-#r = requests.get(send_url)
-#j = json.loads(r.text)
-#lat = j['latitude']
-#lat = 40.7127
-#lon = j['longitude']
-#lon = -74.0059
-#mip = j['ip']
+#get_geo_location_for_ip uses freegeoip to find geolocation info
+#based on a given IP address.
+#Input: IP address
+#Output: JSON for geolocation data
 
-#---------get client ip address ------------
-#def get_client_ip(request):
-#    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-#    if x_forwarded_for:
-#        ip = x_forwarded_for.split(',')[0]
-#    else:
-#        ip = request.META.get('REMOTE_ADDR')
-#    return ip
-
-#clientIP = get_client_ip()
-
-
-
-
-
-#-------------------Twitter Scraper-------------
-#Uses TwitterSearch https://github.com/ckoepp/TwitterSearch
-#Finds tweets with according keywords, language, within 20km
-#of the provided longitude/latitude.
-#Then stores parts of the weather_desc in variables to later pass
 FREEGEOPIP_URL = 'http://freegeoip.net/json/'
 
 SAMPLE_RESPONSE = """{
@@ -209,32 +179,32 @@ SAMPLE_RESPONSE = """{
     "metro_code":501
 }"""
 
-#get_geo_location_for_ip uses freegeoip to find geolocation info
-#based on a given IP address.
-#Input: IP address
-#Output: JSON for geolocation data
+
 def get_geolocation_for_ip(ip):
     url = "http://freegeoip.net/json/"+ip
     response = requests.get(url)
     response.raise_for_status()
     return response.json()
 
+#-------------------Twitter Scraper-------------
+#Uses TwitterSearch https://github.com/ckoepp/TwitterSearch
+#Finds tweets with according keywords, language, within 20km
+#of the provided longitude/latitude.
+#Then stores parts of the weather_desc in variables to later pass
 
 def getTweets(myIP):
-    #locationinfo = get_geolocation_for_ip(myIP)
-    #myLat = locationinfo['latitude']
-    #myLong = locationinfo['longitude']
+    locationinfo = get_geolocation_for_ip(myIP)
+    myLat = locationinfo['latitude']
+    myLong = locationinfo['longitude']
     try:
         tso = TwitterSearchOrder()
         tso.set_keywords(['weather', 'rain', 'rainy', 'raining', 'sunny', 'cloudy', 'cold', 'colder',
                           'foggy', 'fog', 'hail', 'hailing', 'snow', 'snowing',
                           'wind', 'windy', 'overcast'], or_operator=True)
-        #tso.set_until(datetime.date(2015, 11, 13))
         tso.set_language('en')
-        #tso.set_geocode(myLat, myLong, 20, True)
-        tso.set_geocode(40.7127, -74.0059, 20)
-        tso.set_include_entities(False)
-     
+        tso.set_geocode(myLat, myLong, 10, True)
+        #tso.set_geocode(40.7127, -74.0059, 20)
+        tso.set_include_entities(False)     
         ts = TwitterSearch(
                            consumer_key = '0foq3ttMublojZmIuth76mzDP',
                            consumer_secret = '72t1Iaa4JOc60ZJb8UgejqcjIWK3g5OiJt2JnXXnNy2MbDuZ7K',
@@ -243,28 +213,19 @@ def getTweets(myIP):
                            )
         TweetsObj = ts.search_tweets_iterable(tso)
         return weather_desc(TweetsObj)
-       
-    #except TwitterSearchException as e:
+
     except:  # catch all exception here
         return "Location/Tweets not found"
 
 
-def getHelloWorld(abc):
-    return "hello world"
+#Temperature of current location based on API 
 
-
-
-
-#Temperature of current location based on API needs to be moved to Javascript
-#on Client Side
-
-#Same with City name.
 
 #Future to add:
 #Clothing recommendation/Actions to take
 
 
-
+#-------------------RENDER PAGES---------------
 #Renders the html pages based on template.
 #Basic template provides
 
@@ -314,24 +275,37 @@ def about():
 @app.route('/tweather')
 def tweather():
     """Renders the tweather page."""
-    #clientIP = request.remote_addr
-    #clientLocation = get_geolocation_for_ip(clientIP)['latitude']
-    #myLat = clientLocation['latitude']
-    #myLong = clientLocation['longitude']
-    #myCity = clientLocation['city']
-    #myRegionCode = clientLocation['region_code']
-    #h = getHelloWorld("abc")
-    #var = getTweets("clientIP")
-    temptweets =  getTweets("awfaew")
-    sentiment = temptweets[0]
-    temps = sentiment[1]
-    notions = sentiment[0]
-    precs = sentiment[2]
-    lotTweets = temptweets[1]
-    Tweeters = lotTweets[:5]
-    Tweet0 = lotTweets[0][0]
-    Tweet1 = lotTweets[1][0]
-    Tweet2 = lotTweets[2][0]
+    clientIP = request.remote_addr
+    clientLocation = get_geolocation_for_ip(clientIP)
+    myCity = clientLocation['city']
+    myRegionCode = clientLocation['region_code']
+    if myCity == "":
+        clientIP = "108.46.131.77"
+        myCity = "Brooklyn"
+        myRegionCode = "NY"
+
+    temptweets =  getTweets(clientIP)
+    sentiment = ""
+    temps = ""
+    notions = ""
+    precs = ""
+    lotTweets = ""
+    Tweeters = ""
+    Tweet0 = ""
+    Tweet1 = ""
+    Tweet2 = ""
+
+    if temptweets != "Location/Tweets not found":
+        sentiment = temptweets[0]
+        temps = sentiment[1]
+        notions = sentiment[0]
+        precs = sentiment[2]
+        lotTweets = temptweets[1]
+        Tweeters = lotTweets[:50]
+        Tweet0 = lotTweets[0][0]
+        Tweet1 = lotTweets[1][0]
+        Tweet2 = lotTweets[2][0]
+    
     #return clientIP+myCity
     #return "Hello" + Tweet0
     
@@ -352,7 +326,7 @@ def tweather():
         #city = myCity,
         #state = myRegionCode,
         clothes = "Wear...",
-        temp_loc = "myCity"
+        temp_loc = myCity + ", " + myRegionCode
         #yourIP = clientIP
     )
 
