@@ -18,7 +18,36 @@
       //var tweets = [['So windy today! #weather #miserable', [42.35074167, -71.07437778]],
        //             ['Coming from Florida I\'m not used to this cold weather.', [42.34600209, -71.11699372]]];
 
-      window.onload = function(){
+
+   
+      var map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 15,
+        center: new google.maps.LatLng(tweets[0][1][0], tweets[0][1][1]),
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+      });
+   
+      var infowindow = new google.maps.InfoWindow();
+   
+      var marker, i;
+   
+      for (i = 0; i < tweets.length; i++) {
+       marker = new google.maps.Marker({
+         position: new google.maps.LatLng(tweets[i][1][0], tweets[i][1][1]),
+         map: map
+       });
+   
+       google.maps.event.addListener(marker, 'click', (function(marker, i) {
+         return function() {
+          content = tweets[i][0] + "</br> \n Posted by:  @" + tweets[i][3] + " Posted at: " + tweets[i][2] 
+           infowindow.setContent(content);
+           infowindow.open(map, marker);
+         }
+       })(marker, i));
+     }
+     
+     /*
+
+           window.onload = function(){
       if(navigator.geolocation)
           navigator.geolocation.getCurrentPosition(handleGetCurrentPosition, onError);
   }
@@ -60,32 +89,7 @@
   function onError(){
 
   }
-   
-     /* var map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 15,
-        center: new google.maps.LatLng(tweets[0][1][0], tweets[0][1][1]),
-        mapTypeId: google.maps.MapTypeId.ROADMAP
-      });
-   
-      var infowindow = new google.maps.InfoWindow();
-   
-      var marker, i;
-   
-      for (i = 0; i < tweets.length; i++) {
-       marker = new google.maps.Marker({
-         position: new google.maps.LatLng(tweets[i][1][0], tweets[i][1][1]),
-         map: map
-       });
-   
-       google.maps.event.addListener(marker, 'click', (function(marker, i) {
-         return function() {
-          content = tweets[i][0] + "</br> \n Posted by:  @" + tweets[i][3] + " Posted at: " + tweets[i][2] 
-           infowindow.setContent(content);
-           infowindow.open(map, marker);
-         }
-       })(marker, i));
-     }
-     */
+  */
    </script>
   </div>
    <div id="content">
@@ -97,7 +101,8 @@
         <h1 class = "big cool" style = "color:#FFFFFF;">{{message}}</h1>
         <h1 class = "big cool" style = "color:#FFFFFF;" >{{message1}}</h1>
         <h1 class = "big cool" style = "color:#FFFFFF">{{message4}}</h1>
-        <h2 id = "temp" class = "medium cool" style = "color: rgb(2, 29, 59)"> {{ yourIP <!-- tempLoc --> }} </h2>
+        <!-- tempLoc -->
+        <h2 id = "temp" class = "medium cool" style = "color: rgb(2, 29, 59)"> {{ tempLoc }} </h2>
         <h3 class = "small cool" style = "color:#FFFFFF"> Wear: {{ clothes }} </h3>
         <h3 class = "small cool" style = "color:rgb(2, 29, 59)">{{message5}}</h3>
         <div class = "cool tweets" style = "color:#FFFFFF"> 
@@ -132,3 +137,5 @@
 
 
   {% endblock %}
+
+

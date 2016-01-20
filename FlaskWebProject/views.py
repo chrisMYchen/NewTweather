@@ -15,6 +15,7 @@ from flask import request
 from flask import jsonify
 from urllib2 import urlopen
 from contextlib import closing
+import pdb
 
 
 
@@ -167,16 +168,31 @@ def weather_desc(tweets):
 #r = requests.get(send_url)
 #j = json.loads(r.text)
 #lat = j['latitude']
-lat = 40.7127
+#lat = 40.7127
 #lon = j['longitude']
-lon = -74.0059
+#lon = -74.0059
 #mip = j['ip']
 
 #---------get client ip address ------------
+#def get_client_ip(request):
+#    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+#    if x_forwarded_for:
+#        ip = x_forwarded_for.split(',')[0]
+#    else:
+#        ip = request.META.get('REMOTE_ADDR')
+#    return ip
 
-clientIP = request.remote_addr
+#clientIP = get_client_ip()
 
-#http://stackoverflow.com/questions/2543018/what-python-libraries-can-tell-me-approximate-location-and-time-zone-given-an-ip
+
+
+
+
+#-------------------Twitter Scraper-------------
+#Uses TwitterSearch https://github.com/ckoepp/TwitterSearch
+#Finds tweets with according keywords, language, within 20km
+#of the provided longitude/latitude.
+#Then stores parts of the weather_desc in variables to later pass
 FREEGEOPIP_URL = 'http://freegeoip.net/json/'
 
 SAMPLE_RESPONSE = """{
@@ -198,58 +214,45 @@ SAMPLE_RESPONSE = """{
 #Input: IP address
 #Output: JSON for geolocation data
 def get_geolocation_for_ip(ip):
-    url = '{}/{}'.format(FREEGEOPIP_URL, ip)
-
+    url = "http://freegeoip.net/json/"+ip
     response = requests.get(url)
     response.raise_for_status()
-
     return response.json()
 
-clientLocation = get_geolocation_for_ip(clientIP)
-myLat = clientLocation['latitude']
-myLong = clientLocation['longitude']
-myCity = clientLocation['city']
-myRegionCode = clientLocation['region_code']
 
-
-
-#-------------------Twitter Scraper-------------
-#Uses TwitterSearch https://github.com/ckoepp/TwitterSearch
-#Finds tweets with according keywords, language, within 20km
-#of the provided longitude/latitude.
-#Then stores parts of the weather_desc in variables to later pass
-
-from TwitterSearch import *
-try:
-    tso = TwitterSearchOrder()
-    tso.set_keywords(['weather', 'rain', 'rainy', 'raining', 'sunny', 'cloudy', 'cold', 'colder',
-                      'foggy', 'fog', 'hail', 'hailing', 'snow', 'snowing',
-                      'wind', 'windy', 'overcast'], or_operator=True)
-    #tso.set_until(datetime.date(2015, 11, 13))
-    tso.set_language('en')
-    tso.set_geocode(myLat, myLong, 20, True)
-    tso.set_include_entities(False)
- 
-    ts = TwitterSearch(
-                       consumer_key = '0foq3ttMublojZmIuth76mzDP',
-                       consumer_secret = '72t1Iaa4JOc60ZJb8UgejqcjIWK3g5OiJt2JnXXnNy2MbDuZ7K',
-                       access_token = '4188038303-tlz5WruG6b78FugN2CBq9lsuRa5IJYtnzxgRMwr',
-                       access_token_secret = 'bLLK8LDSyAVUL9EVtQkNGDHx8DP1FGRleNwi5FVqMrNVi'
-                       )
- 
-    var = (weather_desc(ts.search_tweets_iterable(tso)))
-    sentiment = var[0]
-    temps = sentiment[1]
-    notions = sentiment[0]
-    precs = sentiment[2]
-    lotTweets = var[1]
- 
-    #for tweet in ts.search_tweets_iterable(tso):
+def getTweets(myIP):
+    #locationinfo = get_geolocation_for_ip(myIP)
+    #myLat = locationinfo['latitude']
+    #myLong = locationinfo['longitude']
+    try:
+        tso = TwitterSearchOrder()
+        tso.set_keywords(['weather', 'rain', 'rainy', 'raining', 'sunny', 'cloudy', 'cold', 'colder',
+                          'foggy', 'fog', 'hail', 'hailing', 'snow', 'snowing',
+                          'wind', 'windy', 'overcast'], or_operator=True)
+        #tso.set_until(datetime.date(2015, 11, 13))
+        tso.set_language('en')
+        #tso.set_geocode(myLat, myLong, 20, True)
+        tso.set_geocode(40.7127, -74.0059, 20)
+        tso.set_include_entities(False)
+     
+        ts = TwitterSearch(
+                           consumer_key = '0foq3ttMublojZmIuth76mzDP',
+                           consumer_secret = '72t1Iaa4JOc60ZJb8UgejqcjIWK3g5OiJt2JnXXnNy2MbDuZ7K',
+                           access_token = '4188038303-tlz5WruG6b78FugN2CBq9lsuRa5IJYtnzxgRMwr',
+                           access_token_secret = 'bLLK8LDSyAVUL9EVtQkNGDHx8DP1FGRleNwi5FVqMrNVi'
+                           )
+        TweetsObj = ts.search_tweets_iterable(tso)
+        return weather_desc(TweetsObj)
        
-        #print( '@%s tweeted: %s at %s at %s' % ( tweet['user']['screen_name'], tweet['text'], tweet['geo'], tweet['created_at'] ) )
- 
-except TwitterSearchException as e:
-    print(e)
+    #except TwitterSearchException as e:
+    except:  # catch all exception here
+        return "Location/Tweets not found"
+
+
+def getHelloWorld(abc):
+    return "hello world"
+
+
 
 
 #Temperature of current location based on API needs to be moved to Javascript
@@ -270,6 +273,8 @@ except TwitterSearchException as e:
 @app.route('/home')
 def home():
     """Renders the home page."""
+    clientIP = request.remote_addr
+    return getTweets(request.remote_addr)
     return render_template(
         'index.html',
         title='Home Page',
@@ -301,18 +306,40 @@ def about():
 
 
 #Collects first 25 tweets as well as the three most recent
-Tweeters = lotTweets[:25]
-Tweet0 = lotTweets[0][0]
-Tweet1 = lotTweets[1][0]
-Tweet2 = lotTweets[2][0]
+
+
+
 
 #Renders the Tweather page and passes necessary variables
 @app.route('/tweather')
 def tweather():
     """Renders the tweather page."""
+    #clientIP = request.remote_addr
+    #clientLocation = get_geolocation_for_ip(clientIP)['latitude']
+    #myLat = clientLocation['latitude']
+    #myLong = clientLocation['longitude']
+    #myCity = clientLocation['city']
+    #myRegionCode = clientLocation['region_code']
+    #h = getHelloWorld("abc")
+    #var = getTweets("clientIP")
+    temptweets =  getTweets("awfaew")
+    sentiment = temptweets[0]
+    temps = sentiment[1]
+    notions = sentiment[0]
+    precs = sentiment[2]
+    lotTweets = temptweets[1]
+    Tweeters = lotTweets[:5]
+    Tweet0 = lotTweets[0][0]
+    Tweet1 = lotTweets[1][0]
+    Tweet2 = lotTweets[2][0]
+    #return clientIP+myCity
+    #return "Hello" + Tweet0
+    
+    #print temptweets
+    #return "temptweets"
     return render_template(
         'tweather.html',
-        title='Tweather',
+        title= "Tweather",
 #        year=datetime.now().year,
         message= notions.title() + ', ',
         message1= precs.title() + ',',
@@ -322,11 +349,11 @@ def tweather():
         t1 = Tweet0,
         t2 = Tweet1,
         t3 = Tweet2,
-        city = myCity,
-        state = myRegionCode,
+        #city = myCity,
+        #state = myRegionCode,
         clothes = "Wear...",
-        temp_loc = "NY Temp...",
-        yourIP = clientIP
+        temp_loc = "myCity"
+        #yourIP = clientIP
     )
 
 
